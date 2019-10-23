@@ -43,7 +43,7 @@ The benchmark datasets introdruced in this work can be downloaded [here](https:/
 
 ### KITTI Odometry Datasets
 * 00-10 sequences, 00 02 05 06 07 08 have loop closures
-* Using submap_generation/KITTI/gen_gt_submap.py to generate submaps
+* Using submap_generation/KITTI/gen_gt_submap.py to generate submaps; Notice that Z axis of the 08 sequence has the wrong ground truth value. We use the LOAM result on 08 instead.
 * Using submap_generation/KITTI/gen_gt.py to generate triplets(query, pos, negs)
 * Using gen_KITTI_vec_ref.py to get features with pretrained refined model provided by author
 * Using gen_KITTI_vec.py to get features with re-training model on KITTI
