@@ -41,6 +41,15 @@ The benchmark datasets introdruced in this work can be downloaded [here](https:/
 * Test/Infenrence submaps are found in the folder "pointcloud_25m_25/" and its corresponding csv file is "pointcloud_centroids_25.csv"
 * Training submaps are not mutually disjoint per run but test submaps are
 
+### KITTI Odometry Datasets
+* 00-10 sequences, 00 02 05 06 07 08 have loop closures
+* Using submap_generation/KITTI/gen_gt_submap.py to generate submaps
+* Using submap_generation/KITTI/gen_gt.py to generate triplets(query, pos, negs)
+* Using gen_KITTI_vec_ref.py to get features with pretrained refined model provided by author
+* Using gen_KITTI_vec.py to get features with re-training model on KITTI
+* Modify loading_pointclouds_kitti.py to change strategy (drop0 drop30 drop90 fov100 drop0_rotate)
+* Using train_pointnetvlad_kitti.py to train the model on KITTI with 1-fold strategy
+
 ## Project Code
 
 ### Pre-requisites
