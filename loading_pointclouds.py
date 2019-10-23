@@ -254,3 +254,19 @@ def get_jittered_tuple(dict_value, num_pos, num_neg, QUERY_DICT, hard_neg=[],oth
 		n2_jit= np.squeeze(n2_jit)
 
 		return [q_jit,p_jit,n_jit,n2_jit]
+
+def listDir(path, list_name):
+    """
+    :param path: root_dir
+    :param list_name: abs paths of all files under the root_dir
+    :return:
+    """
+    for file in os.listdir(path):
+        file_path = os.path.join(path, file)
+        if os.path.isdir(file_path):
+            listDir(file_path, list_name)
+        else:
+            list_name.append(file_path)
+
+if __name__ == "__main__":
+	TRAIN_DICT = get_queries_dict('generating_queries/training_queries_baseline.pickle')
