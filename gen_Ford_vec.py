@@ -9,7 +9,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 from pointnetvlad_cls import *
-from loading_pointclouds_kitti import *
+from loading_pointclouds_ford import *
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KDTree
 from tqdm import tqdm
@@ -37,17 +37,17 @@ DECAY_STEP = FLAGS.decay_step
 DECAY_RATE = FLAGS.decay_rate
 
 # LOG_DIR = '../models/refine'
-LOG_DIR = 'log_fold08/' # todo
-RESULTS_FOLDER=LOG_DIR
+LOG_DIR = 'log_fold07/' # todo
+RESULTS_FOLDER= "KITTI_Ford"
 # RESULTS_FOLDER="pretrained_results/"
 
 if not os.path.exists(RESULTS_FOLDER): os.mkdir(RESULTS_FOLDER)
 
-OUT_FEATURE_FOLDER = os.path.join(RESULTS_FOLDER, "feature_database/test_time")    # todo
+OUT_FEATURE_FOLDER = os.path.join(RESULTS_FOLDER, "feature_database")    # todo
 if not os.path.exists(OUT_FEATURE_FOLDER): os.makedirs(OUT_FEATURE_FOLDER)
 # DATABASE_FILE= 'generating_queries/oxford_evaluation_database.pickle'
 # QUERY_FILE= 'generating_queries/oxford_evaluation_query.pickle'
-KITTI_submap_dir = "/media/work/data/kitti/odometry/submap_seg_bin"
+KITTI_submap_dir = "/media/data/Ford/submap"
 
 output_file= RESULTS_FOLDER +'results.txt'
 # model_file= "model_refine.ckpt"
@@ -133,7 +133,7 @@ def evaluate():
         # similarity=[]
         # one_percent_recall=[]
         # sequences = ["00", "02", "05", "08", "06", "07"]
-        sequences = ["08"]  # todo
+        sequences = ["01","02"]  # todo
         for sq in sequences:
             sq_dir = os.path.join(KITTI_submap_dir, sq)
             t1 = time.time()
@@ -141,7 +141,7 @@ def evaluate():
             t2 = time.time()
             print("time: ", t2 - t1)
             feature_db_name = os.path.join(OUT_FEATURE_FOLDER, sq + "_PV_" + sq + ".npy")
-
+            np.save(feature_db_name, feature_db)
 
 
 def get_latent_vectors(sess, ops, sq_dir):
@@ -167,8 +167,10 @@ def get_latent_vectors(sess, ops, sq_dir):
         q3=queries[BATCH_NUM_QUERIES*(POSITIVES_PER_QUERY+1):BATCH_NUM_QUERIES*(NEGATIVES_PER_QUERY+POSITIVES_PER_QUERY+1)]
         q3=np.reshape(q3,(BATCH_NUM_QUERIES,NEGATIVES_PER_QUERY,NUM_POINTS,3))
         feed_dict={ops['query']:q1, ops['positives']:q2, ops['negatives']:q3, ops['is_training_pl']:is_training}
+        t1 = time.time()
         o1, o2, o3=sess.run([ops['q_vec'], ops['pos_vecs'], ops['neg_vecs']], feed_dict=feed_dict)
-        
+        t2 = time.time()
+        print("inference time: ", t2-t1)
         o1=np.reshape(o1,(-1,o1.shape[-1]))
         o2=np.reshape(o2,(-1,o2.shape[-1]))
         o3=np.reshape(o3,(-1,o3.shape[-1]))

@@ -9,11 +9,10 @@ import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 from pointnetvlad_cls import *
-from loading_pointclouds_kitti import *
+from loading_pointclouds_ford import *
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KDTree
 from tqdm import tqdm
-import time
 
 #params
 parser = argparse.ArgumentParser()
@@ -36,22 +35,22 @@ GPU_INDEX = FLAGS.gpu
 DECAY_STEP = FLAGS.decay_step
 DECAY_RATE = FLAGS.decay_rate
 
-# LOG_DIR = '../models/refine'
-LOG_DIR = 'log_fold08/' # todo
-RESULTS_FOLDER=LOG_DIR
-# RESULTS_FOLDER="pretrained_results/"
+LOG_DIR = '../models/refine'
+# LOG_DIR = 'log_fold00/'
+# RESULTS_FOLDER=LOG_DIR
+RESULTS_FOLDER="pretrained_results/"
 
 if not os.path.exists(RESULTS_FOLDER): os.mkdir(RESULTS_FOLDER)
 
-OUT_FEATURE_FOLDER = os.path.join(RESULTS_FOLDER, "feature_database/test_time")    # todo
+OUT_FEATURE_FOLDER = os.path.join(RESULTS_FOLDER, "feature_database/Ford")
 if not os.path.exists(OUT_FEATURE_FOLDER): os.makedirs(OUT_FEATURE_FOLDER)
 # DATABASE_FILE= 'generating_queries/oxford_evaluation_database.pickle'
 # QUERY_FILE= 'generating_queries/oxford_evaluation_query.pickle'
-KITTI_submap_dir = "/media/work/data/kitti/odometry/submap_seg_bin"
+KITTI_submap_dir = "/media/data/Ford/submap"
 
 output_file= RESULTS_FOLDER +'results.txt'
-# model_file= "model_refine.ckpt"
-model_file= "model.ckpt"
+model_file= "model_refine.ckpt"
+# model_file= "model.ckpt"
 
 # DATABASE_SETS= get_sets_dict(DATABASE_FILE)
 # QUERY_SETS= get_sets_dict(QUERY_FILE)
@@ -132,15 +131,12 @@ def evaluate():
         # count=0
         # similarity=[]
         # one_percent_recall=[]
-        # sequences = ["00", "02", "05", "08", "06", "07"]
-        sequences = ["08"]  # todo
+        sequences = ["01", "02"]
         for sq in sequences:
             sq_dir = os.path.join(KITTI_submap_dir, sq)
-            t1 = time.time()
             feature_db = get_latent_vectors(sess, ops, sq_dir)
-            t2 = time.time()
-            print("time: ", t2 - t1)
-            feature_db_name = os.path.join(OUT_FEATURE_FOLDER, sq + "_PV_" + sq + ".npy")
+            feature_db_name = os.path.join(OUT_FEATURE_FOLDER, sq+"_PV_ref.npy")
+            np.save(feature_db_name, feature_db)
 
 
 
@@ -210,6 +206,68 @@ def get_latent_vectors(sess, ops, sq_dir):
     assert q_output.shape[0] == len(train_file_idxs)
     return q_output
 
+# def get_recall(sess, ops, m, n):
+#     global DATABASE_VECTORS
+#     global QUERY_VECTORS
+#
+#     database_output= DATABASE_VECTORS[m]
+#     queries_output= QUERY_VECTORS[n]
+#
+#     print(len(queries_output))
+#     database_nbrs = KDTree(database_output)
+#
+#     num_neighbors=25
+#     recall=[0]*num_neighbors
+#
+#     top1_similarity_score=[]
+#     one_percent_retrieved=0
+#     threshold=max(int(round(len(database_output)/100.0)),1)
+#
+#     num_evaluated=0
+#     for i in range(len(queries_output)):
+#         true_neighbors= QUERY_SETS[n][i][m]
+#         if(len(true_neighbors)==0):
+#             continue
+#         num_evaluated+=1
+#         distances, indices = database_nbrs.query(np.array([queries_output[i]]),k=num_neighbors)
+#         for j in range(len(indices[0])):
+#             if indices[0][j] in true_neighbors:
+#                 if(j==0):
+#                     similarity= np.dot(queries_output[i],database_output[indices[0][j]])
+#                     top1_similarity_score.append(similarity)
+#                 recall[j]+=1
+#                 break
+#
+#         if len(list(set(indices[0][0:threshold]).intersection(set(true_neighbors))))>0:
+#             one_percent_retrieved+=1
+#
+#     one_percent_recall=(one_percent_retrieved/float(num_evaluated))*100
+#     recall=(np.cumsum(recall)/float(num_evaluated))*100
+#     print(recall)
+#     print(np.mean(top1_similarity_score))
+#     print(one_percent_recall)
+#     return recall, top1_similarity_score, one_percent_recall
+#
+# def get_similarity(sess, ops, m, n):
+#     global DATABASE_VECTORS
+#     global QUERY_VECTORS
+#
+#     database_output= DATABASE_VECTORS[m]
+#     queries_output= QUERY_VECTORS[n]
+#
+#     threshold= len(queries_output)
+#     print(len(queries_output))
+#     database_nbrs = KDTree(database_output)
+#
+#     similarity=[]
+#     for i in range(len(queries_output)):
+#         distances, indices = database_nbrs.query(np.array([queries_output[i]]),k=1)
+#         for j in range(len(indices[0])):
+#             q_sim= np.dot(q_output[i], database_output[indices[0][j]])
+#             similarity.append(q_sim)
+#     average_similarity=np.mean(similarity)
+#     print(average_similarity)
+#     return average_similarity
 
 
 if __name__ == "__main__":
